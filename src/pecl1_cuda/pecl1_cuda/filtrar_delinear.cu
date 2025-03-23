@@ -2,6 +2,7 @@
 #include <cuda_runtime.h>
 #include <iostream>
 #include <string>
+#include "identificar_colores.cuh"
 
 __constant__ float c_umbral;
 __constant__ float c_magnitud;
@@ -82,9 +83,12 @@ __global__ void kernelFiltrarDibujar(byte* d_input, byte* d_output, int width, i
     d_output[idx + 2] = resultado[2];
 }
 
-void filtrarYDelimitarColor(byte* h_pixels, int width, int height, int bpp, const char* colorNombre, float umbral, float magnitud) {
+void filtrarYDelimitarColor(byte* h_pixels, int width, int height, int bpp,
+    ColorDetectado color, float umbral, float magnitud,
+    const char* ruta_salida) {
     size_t size = width * height * bpp;
-    byte* d_input, * d_output;
+    byte* d_input;
+    byte* d_output;
 
     cudaMalloc(&d_input, size);
     cudaMalloc(&d_output, size);
@@ -99,24 +103,18 @@ void filtrarYDelimitarColor(byte* h_pixels, int width, int height, int bpp, cons
     dim3 threads(blockSize, blockSize);
     dim3 blocks((width + blockSize - 1) / blockSize, (height + blockSize - 1) / blockSize);
 
-    int sharedMemSize = blockSize * blockSize * bpp;
+    int colorCode = static_cast<int>(color);  // 0 = ROJO, 1 = VERDE, 2 = AZUL
 
-    int colorCode = 0;
-    if (strcmp(colorNombre, "verde") == 0) colorCode = 1;
-    else if (strcmp(colorNombre, "azul") == 0) colorCode = 2;
-
-    kernelFiltrarDibujar << <blocks, threads, sharedMemSize >> > (d_input, d_output, width, height, bpp, colorCode);
+    kernelFiltrarDibujar << <blocks, threads >> > (d_input, d_output, width, height, bpp, colorCode);
     cudaDeviceSynchronize();
 
     cudaMemcpy(h_pixels, d_output, size, cudaMemcpyDeviceToHost);
 
-    std::string ruta = std::string("C:\\Users\\iubal.camjalli\\Documents\\PAP\\PAP-PECL1\\imgs\\filtrar_delinear_") + colorNombre + ".bmp";
-
-    if (!exportarBMP(ruta.c_str(), h_pixels, width, height, bpp)) {
-        std::cerr << "Error al guardar imagen filtrada de color " << colorNombre << std::endl;
+    if (!exportarBMP(ruta_salida, h_pixels, width, height, bpp)) {
+        std::cerr << "Error al guardar imagen filtrada de color en: " << ruta_salida << std::endl;
     }
     else {
-        std::cout << "Imagen guardada: " << ruta << std::endl;
+        std::cout << "Imagen guardada en: " << ruta_salida << std::endl;
     }
 
     cudaFree(d_input);

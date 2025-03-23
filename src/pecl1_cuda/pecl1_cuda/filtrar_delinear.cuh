@@ -1,8 +1,8 @@
-#ifndef FILTRAR_DELINEAR_CUH
-#define FILTRAR_DELINEAR_CUH
-
+#pragma once
 #include "utils.h"
+#include "identificar_colores.cuh"
 
-void filtrarYDelimitarColor(byte* h_pixels, int width, int height, int bpp, const char* colorNombre, float umbral, float magnitud);
 
-#endif
+void filtrarYDelimitarColor(byte* h_pixels, int width, int height, int bpp,
+    ColorDetectado color, float umbral, float magnitud,
+    const char* ruta_salida);

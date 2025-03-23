@@ -1,0 +1,10 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskLabel": "tarea-pecl1_cuda",
+      "appliesTo": "src/pecl1_cuda/pecl1_cuda/",
+      "type": "launch"
+    }
+  ]
+}
