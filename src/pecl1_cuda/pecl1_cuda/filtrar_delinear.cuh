@@ -1,8 +1,16 @@
 #pragma once
+
 #include "utils.h"
-#include "identificar_colores.cuh"
+#include "identificar_colores.cuh"  // Reutilizar enum existente
 
-
-void filtrarYDelimitarColor(byte* h_pixels, int width, int height, int bpp,
-    ColorDetectado color, float umbral, float magnitud,
-    const char* ruta_salida);
+// Función principal para filtro y delineado de color
+void filtrarYDelimitarColor(
+    byte* h_pixels,
+    int width,
+    int height,
+    int bpp,
+    ColorDetectado color,
+    float umbral,
+    int halo,
+    const char* ruta_salida
+);

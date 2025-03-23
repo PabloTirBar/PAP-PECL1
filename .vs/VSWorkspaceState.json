@@ -3,8 +3,10 @@
     "",
     "\\src",
     "\\src\\pecl1_cuda",
-    "\\src\\pecl1_cuda\\pecl1_cuda"
+    "\\src\\pecl1_cuda\\pecl1_cuda",
+    "\\src\\pecl1_cuda\\pecl1_cuda\\x64",
+    "\\src\\pecl1_cuda\\x64"
   ],
-  "SelectedNode": "\\src\\pecl1_cuda\\pecl1_cuda\\identificar_colores.cu",
+  "SelectedNode": "\\src\\pecl1_cuda\\pecl1_cuda\\main.cu",
   "PreviewInSolutionExplorer": false
 }

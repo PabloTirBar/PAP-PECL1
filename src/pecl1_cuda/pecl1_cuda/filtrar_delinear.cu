@@ -5,87 +5,90 @@
 #include "identificar_colores.cuh"
 
 __constant__ float c_umbral;
-__constant__ float c_magnitud;
+__constant__ int c_halo;
 
 __global__ void kernelFiltrarDibujar(byte* d_input, byte* d_output, int width, int height, int bpp, int colorCode) {
-    extern __shared__ byte shared[];
-
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
-    int tx = threadIdx.x;
-    int ty = threadIdx.y;
-
-    int idx = (y * width + x) * bpp;
-    int localIdx = (ty * blockDim.x + tx) * bpp;
-
     if (x >= width || y >= height) return;
 
-    shared[localIdx + 0] = d_input[idx + 0]; // B
-    shared[localIdx + 1] = d_input[idx + 1]; // G
-    shared[localIdx + 2] = d_input[idx + 2]; // R
+    int idx = (y * width + x) * bpp;
 
-    __syncthreads();
-
-    byte b = shared[localIdx + 0];
-    byte g = shared[localIdx + 1];
-    byte r = shared[localIdx + 2];
+    byte b = d_input[idx + 0];
+    byte g = d_input[idx + 1];
+    byte r = d_input[idx + 2];
 
     bool esColor = false;
 
     if (colorCode == 0) {
-        esColor = (r >= 100 && r <= 255 && g < 150 && b < 150);
+        esColor = (r >= 100 - c_umbral && r <= 255 + c_umbral &&
+            g >= 0 - c_umbral && g < 150 + c_umbral &&
+            b >= 0 - c_umbral && b < 150 + c_umbral);
     }
     else if (colorCode == 1) {
-        esColor = (r > 30 && r <= 150 && g >= 50 && g <= 255 && b < 75);
+        esColor = (r > 30 - c_umbral && r <= 150 + c_umbral &&
+            g >= 50 - c_umbral && g <= 255 + c_umbral &&
+            b >= 0 - c_umbral && b < 75 + c_umbral);
     }
     else if (colorCode == 2) {
-        esColor = (r <= 200 && g < 250 && b >= 100 && b <= 255);
+        esColor = (r >= 0 - c_umbral && r <= 200 + c_umbral &&
+            g >= 0 - c_umbral && g < 250 + c_umbral &&
+            b >= 100 - c_umbral && b <= 255 + c_umbral);
     }
-
-    byte resultado[3] = { 200, 200, 200 };
 
     if (esColor) {
-        bool borde = false;
+        d_output[idx + 0] = b;
+        d_output[idx + 1] = g;
+        d_output[idx + 2] = r;
+        return;
+    }
 
-        for (int dy = -1; dy <= 1 && !borde; dy++) {
-            for (int dx = -1; dx <= 1 && !borde; dx++) {
-                int nx = x + dx, ny = y + dy;
-                if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+    // Ver si está cerca de una región de color -> halo negro
+    bool cerca = false;
+    for (int dy = -c_halo; dy <= c_halo && !cerca; dy++) {
+        for (int dx = -c_halo; dx <= c_halo && !cerca; dx++) {
+            int nx = x + dx, ny = y + dy;
+            if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
 
-                int nIdx = (ny * width + nx) * bpp;
-                byte nb = d_input[nIdx + 0];
-                byte ng = d_input[nIdx + 1];
-                byte nr = d_input[nIdx + 2];
+            int nIdx = (ny * width + nx) * bpp;
+            byte nb = d_input[nIdx + 0];
+            byte ng = d_input[nIdx + 1];
+            byte nr = d_input[nIdx + 2];
 
-                bool vecinoColor = false;
-                if (colorCode == 0) vecinoColor = (nr >= 100 && nr <= 255 && ng < 150 && nb < 150);
-                else if (colorCode == 1) vecinoColor = (nr > 30 && nr <= 150 && ng >= 50 && ng <= 255 && nb < 75);
-                else if (colorCode == 2) vecinoColor = (nr <= 200 && ng < 250 && nb >= 100 && nb <= 255);
+            bool vecinoColor = false;
+            if (colorCode == 0)
+                vecinoColor = (nr >= 100 - c_umbral && nr <= 255 + c_umbral &&
+                    ng >= 0 - c_umbral && ng < 150 + c_umbral &&
+                    nb >= 0 - c_umbral && nb < 150 + c_umbral);
+            else if (colorCode == 1)
+                vecinoColor = (nr > 30 - c_umbral && nr <= 150 + c_umbral &&
+                    ng >= 50 - c_umbral && ng <= 255 + c_umbral &&
+                    nb >= 0 - c_umbral && nb < 75 + c_umbral);
+            else if (colorCode == 2)
+                vecinoColor = (nr >= 0 - c_umbral && nr <= 200 + c_umbral &&
+                    ng >= 0 - c_umbral && ng < 250 + c_umbral &&
+                    nb >= 100 - c_umbral && nb <= 255 + c_umbral);
 
-                if (!vecinoColor) borde = true;
-            }
-        }
-
-        if (borde) {
-            resultado[0] = 0;
-            resultado[1] = 0;
-            resultado[2] = 0;
-        }
-        else {
-            resultado[0] = b;
-            resultado[1] = g;
-            resultado[2] = r;
+            if (vecinoColor) cerca = true;
         }
     }
 
-    d_output[idx + 0] = resultado[0];
-    d_output[idx + 1] = resultado[1];
-    d_output[idx + 2] = resultado[2];
+    if (cerca) {
+        d_output[idx + 0] = 0;
+        d_output[idx + 1] = 0;
+        d_output[idx + 2] = 0;
+    }
+    else {
+        byte gris = (byte)(0.299f * r + 0.587f * g + 0.114f * b);
+        d_output[idx + 0] = gris;
+        d_output[idx + 1] = gris;
+        d_output[idx + 2] = gris;
+    }
 }
 
 void filtrarYDelimitarColor(byte* h_pixels, int width, int height, int bpp,
-    ColorDetectado color, float umbral, float magnitud,
-    const char* ruta_salida) {
+    ColorDetectado color, float umbral, int halo, const char* ruta_salida) {
+
     size_t size = width * height * bpp;
     byte* d_input;
     byte* d_output;
@@ -95,7 +98,7 @@ void filtrarYDelimitarColor(byte* h_pixels, int width, int height, int bpp,
     cudaMemcpy(d_input, h_pixels, size, cudaMemcpyHostToDevice);
 
     cudaMemcpyToSymbol(c_umbral, &umbral, sizeof(float));
-    cudaMemcpyToSymbol(c_magnitud, &magnitud, sizeof(float));
+    cudaMemcpyToSymbol(c_halo, &halo, sizeof(int));
 
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, 0);
@@ -103,9 +106,10 @@ void filtrarYDelimitarColor(byte* h_pixels, int width, int height, int bpp,
     dim3 threads(blockSize, blockSize);
     dim3 blocks((width + blockSize - 1) / blockSize, (height + blockSize - 1) / blockSize);
 
-    int colorCode = static_cast<int>(color);  // 0 = ROJO, 1 = VERDE, 2 = AZUL
+    int colorCode = static_cast<int>(color);
 
-    kernelFiltrarDibujar << <blocks, threads >> > (d_input, d_output, width, height, bpp, colorCode);
+    kernelFiltrarDibujar << <blocks, threads >> > (
+        d_input, d_output, width, height, bpp, colorCode);
     cudaDeviceSynchronize();
 
     cudaMemcpy(h_pixels, d_output, size, cudaMemcpyDeviceToHost);

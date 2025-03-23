@@ -3,7 +3,7 @@
 #include <iostream>
 
 __constant__ float c_umbral;
-__constant__ float c_magnitud;
+
 
 __global__ void kernelFiltrarColor(byte* d_pixels_in, byte* d_pixels_out,
     int width, int height, int bpp,
@@ -22,13 +22,19 @@ __global__ void kernelFiltrarColor(byte* d_pixels_in, byte* d_pixels_out,
     bool esColor = false;
 
     if (colorCode == 0) { // ROJO
-        esColor = (r >= 100 && r <= 255 && g < 150 && b < 150);
+        esColor = (r >= 100 - c_umbral && r <= 255 + c_umbral &&
+            g >= 0 - c_umbral && g < 150 + c_umbral &&
+            b >= 0 - c_umbral && b < 150 + c_umbral);
     }
     else if (colorCode == 1) { // VERDE
-        esColor = (r > 30 && r <= 150 && g >= 50 && g <= 255 && b < 75);
+        esColor = (r > 30 - c_umbral && r <= 150 + c_umbral &&
+            g >= 50 - c_umbral && g <= 255 &&
+            b >= 0 - c_umbral && b < 75 + c_umbral);
     }
     else if (colorCode == 2) { // AZUL
-        esColor = (r <= 200 && g < 250 && b >= 100 && b <= 255);
+        esColor = (r >= 0 - c_umbral && r <= 200 + c_umbral &&
+            g >= 0 - c_umbral && g < 250 + c_umbral &&
+            b >= 100 - c_umbral && b <= 255 );
     }
 
     if (esColor) {
@@ -46,7 +52,7 @@ __global__ void kernelFiltrarColor(byte* d_pixels_in, byte* d_pixels_out,
 }
 
 void identificarColor(byte* h_pixels, int width, int height, int bytesPerPixel,
-    ColorDetectado color, float umbral, float magnitud, const char* ruta_salida) {
+    ColorDetectado color, float umbral, const char* ruta_salida) {
 
     size_t size = width * height * bytesPerPixel;
 
@@ -62,7 +68,7 @@ void identificarColor(byte* h_pixels, int width, int height, int bytesPerPixel,
     cudaMemcpy(d_count, &h_count, sizeof(int), cudaMemcpyHostToDevice);
 
     cudaMemcpyToSymbol(c_umbral, &umbral, sizeof(float));
-    cudaMemcpyToSymbol(c_magnitud, &magnitud, sizeof(float));
+
 
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, 0);

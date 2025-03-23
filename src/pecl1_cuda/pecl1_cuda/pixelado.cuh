@@ -1,8 +1,12 @@
-#ifndef PIXELADO_CUH
-#define PIXELADO_CUH
+#pragma once
 
 #include "utils.h"
 
-void pixelarImagen(byte* h_pixels, int width, int height, int bytesPerPixel, int blockSize);
-
-#endif
+// Declaración del kernel pixelado con parámetro de tamaño constante
+void pixelarImagen(
+    byte* h_pixels,
+    int width,
+    int height,
+    int bpp,
+    int tamanoPixel
+);

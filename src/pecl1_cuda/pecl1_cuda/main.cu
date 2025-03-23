@@ -92,7 +92,13 @@ int main() {
             break;
         }
         case 3: {
-            pixelarImagen(pixels, ancho, alto, bytesPerPixel, 8);
+            int tamanoPixel;
+            cout << "Introduce el tamaño del píxel para el pixelado (por defecto 8): ";
+            string input;
+            getline(cin, input);
+            tamanoPixel = input.empty() ? 8 : stoi(input);
+
+            pixelarImagen(pixels, ancho, alto, bytesPerPixel, tamanoPixel);
             string rutaSalida = "..\\imgs\\" + nombreArchivo + "_pixelado.bmp";
             if (!exportarBMP(rutaSalida.c_str(), pixels, ancho, alto, bytesPerPixel)) {
                 cerr << "Error al guardar la imagen pixelada." << endl;
@@ -103,15 +109,13 @@ int main() {
             break;
         }
         case 4: {
-            float umbral, magnitud;
+            float umbral;
             cout << "Introduce el umbral (valor por defecto 30): ";
             string input;
             getline(cin, input);
             umbral = input.empty() ? 30.0f : std::stof(input);
 
-            cout << "Introduce el factor de magnitud (valor por defecto 1.0): ";
-            getline(cin, input);
-            magnitud = input.empty() ? 1.0f : std::stof(input);
+
 
             byte* copiaRojo = (byte*)malloc(ancho * alto * bytesPerPixel);
             byte* copiaVerde = (byte*)malloc(ancho * alto * bytesPerPixel);
@@ -120,13 +124,13 @@ int main() {
             memcpy(copiaVerde, pixels, ancho * alto * bytesPerPixel);
             memcpy(copiaAzul, pixels, ancho * alto * bytesPerPixel);
 
-            identificarColor(copiaRojo, ancho, alto, bytesPerPixel, ROJO, umbral, magnitud,
+            identificarColor(copiaRojo, ancho, alto, bytesPerPixel, ROJO, umbral,
                 ("..\\imgs\\" + nombreArchivo + "_identificar_rojo.bmp").c_str());
 
-            identificarColor(copiaVerde, ancho, alto, bytesPerPixel, VERDE, umbral, magnitud,
+            identificarColor(copiaVerde, ancho, alto, bytesPerPixel, VERDE, umbral,
                 ("..\\imgs\\" + nombreArchivo + "_identificar_verde.bmp").c_str());
 
-            identificarColor(copiaAzul, ancho, alto, bytesPerPixel, AZUL, umbral, magnitud,
+            identificarColor(copiaAzul, ancho, alto, bytesPerPixel, AZUL, umbral,
                 ("..\\imgs\\" + nombreArchivo + "_identificar_azul.bmp").c_str());
 
             free(copiaRojo);
@@ -134,38 +138,44 @@ int main() {
             free(copiaAzul);
             break;
         }
-        case 5: {
-            float umbral, magnitud;
-            cout << "Introduce el umbral (valor por defecto 30): ";
-            string input;
-            getline(cin, input);
-            umbral = input.empty() ? 30.0f : std::stof(input);
+              case 5: {
+                    float umbral;
+                    int halo;
+                    std::string input, colorStr;
+                    ColorDetectado color;
 
-            cout << "Introduce el factor de magnitud (valor por defecto 1.0): ";
-            getline(cin, input);
-            magnitud = input.empty() ? 1.0f : std::stof(input);
+                    cout << "Introduce el color a filtrar (rojo / verde / azul): ";
+                    getline(cin, colorStr);
 
-            byte* copiaRojo = (byte*)malloc(ancho * alto * bytesPerPixel);
-            byte* copiaVerde = (byte*)malloc(ancho * alto * bytesPerPixel);
-            byte* copiaAzul = (byte*)malloc(ancho * alto * bytesPerPixel);
-            memcpy(copiaRojo, pixels, ancho * alto * bytesPerPixel);
-            memcpy(copiaVerde, pixels, ancho * alto * bytesPerPixel);
-            memcpy(copiaAzul, pixels, ancho * alto * bytesPerPixel);
+                    if (colorStr == "rojo") color = ROJO;
+                    else if (colorStr == "verde") color = VERDE;
+                    else if (colorStr == "azul") color = AZUL;
+                    else {
+                        cerr << "Color no reconocido. Debe ser: rojo, verde o azul." << endl;
+                        break;
+                    }
 
-            filtrarYDelimitarColor(copiaRojo, ancho, alto, bytesPerPixel, ROJO, umbral, magnitud,
-                ("..\\imgs\\" + nombreArchivo + "_delimitar_identificar_rojo.bmp").c_str());
+                    cout << "Introduce el umbral (por defecto 30): ";
+                    getline(cin, input);
+                    umbral = input.empty() ? 30.0f : std::stof(input);
 
-            filtrarYDelimitarColor(copiaVerde, ancho, alto, bytesPerPixel, VERDE, umbral, magnitud,
-                ("..\\imgs\\" + nombreArchivo + "_delimitar_identificar_verde.bmp").c_str());
+                    cout << "Introduce el tamaño del halo (por defecto 15): ";
+                    getline(cin, input);
+                    halo = input.empty() ? 15 : std::stoi(input);
 
-            filtrarYDelimitarColor(copiaAzul, ancho, alto, bytesPerPixel, AZUL, umbral, magnitud,
-                ("..\\imgs\\" + nombreArchivo + "_delimitar_identificar_azul.bmp").c_str());
+                    byte* copia = (byte*)malloc(ancho * alto * bytesPerPixel);
+                    memcpy(copia, pixels, ancho * alto * bytesPerPixel);
 
-            free(copiaRojo);
-            free(copiaVerde);
-            free(copiaAzul);
-            break;
-        }
+                    string ruta = "..\\imgs\\" + nombreArchivo;
+                    if (color == ROJO) ruta += "_delimitar_identificar_rojo.bmp";
+                    else if (color == VERDE) ruta += "_delimitar_identificar_verde.bmp";
+                    else ruta += "_delimitar_identificar_azul.bmp";
+
+                    filtrarYDelimitarColor(copia, ancho, alto, bytesPerPixel, color, umbral, halo, ruta.c_str());
+
+                    free(copia);
+                    break;
+                }
         case 6: {
             mostrarPseudoHash(pixels, ancho, alto, bytesPerPixel);
             break;
