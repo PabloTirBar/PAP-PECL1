@@ -1,0 +1,9 @@
+﻿  Compiling CUDA source file main.cu...
+  
+  C:\Users\iubal.camjalli\Documents\PAP\PAP-PECL1\src\pecl1_cuda\pecl1_cuda>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc142.pdb" -o C:\Users\iubal.camjalli\Documents\PAP\PAP-PECL1\src\pecl1_cuda\pecl1_cuda\x64\Debug\main.cu.obj "C:\Users\iubal.camjalli\Documents\PAP\PAP-PECL1\src\pecl1_cuda\pecl1_cuda\main.cu" 
+  main.cu
+  tmpxft_00006c90_00000000-7_main.cudafe1.cpp
+  utils.cpp
+     Creando biblioteca C:\Users\iubal.camjalli\Documents\PAP\PAP-PECL1\src\pecl1_cuda\x64\Debug\pecl1_cuda.lib y objeto C:\Users\iubal.camjalli\Documents\PAP\PAP-PECL1\src\pecl1_cuda\x64\Debug\pecl1_cuda.exp
+LINK : warning LNK4098: la biblioteca predeterminada'LIBCMT' entra en conflicto con otras bibliotecas; use la biblioteca /NODEFAULTLIB:biblioteca
+  pecl1_cuda.vcxproj -> C:\Users\iubal.camjalli\Documents\PAP\PAP-PECL1\src\pecl1_cuda\x64\Debug\pecl1_cuda.exe
